@@ -156,7 +156,7 @@ input[type="range"] {
     line-height: 1.4;
 }
 
-.protocol-values {
+.model-rates {
     display: grid;
     gap: 8px;
     margin-top: 14px;
@@ -166,18 +166,18 @@ input[type="range"] {
     font-size: 11px;
 }
 
-.protocol-values div {
+.model-rates div {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
 }
 
-.protocol-values span {
+.model-rates span {
     color: var(--muted);
 }
 
-.protocol-values strong {
+.model-rates strong {
     color: var(--ink);
     font-size: 12px;
 }

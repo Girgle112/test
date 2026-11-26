@@ -1,29 +1,28 @@
 const baseModel = {
     transmission: 0.9,
     exposedToInfected: 1 / 7,
-    deathRate: 0.70 / 7,
-    recoveryRate: 0.30 / 7
+    deathRate: 0.50 / 7,
+    recoveryRate: 0.50 / 7
 };
 
+const infectiousPeriodDays = 7;
 const model = {
     ...baseModel,
-    baseTransmission: baseModel.transmission,
-    protocolReduction: 0,
     population: 515,
     exposed: 10,
     infected: 5
 };
 const cities = [
-    { name: "Tokyo", population: 37115000, protocolReduction: 0.42 },
-    { name: "Delhi", population: 34665000, protocolReduction: 0.24 },
-    { name: "Shanghai", population: 30482000, protocolReduction: 0.38 },
-    { name: "Dhaka", population: 24652000, protocolReduction: 0.20 },
-    { name: "Cairo", population: 23074000, protocolReduction: 0.26 },
-    { name: "São Paulo", population: 22990000, protocolReduction: 0.36 },
-    { name: "Mexico City", population: 22752000, protocolReduction: 0.33 },
-    { name: "Beijing", population: 22596000, protocolReduction: 0.40 },
-    { name: "Mumbai", population: 22089000, protocolReduction: 0.29 },
-    { name: "Osaka", population: 18921000, protocolReduction: 0.44 }
+    { name: "Tokyo", population: 37115000, transmission: 0.20, fatality: 0.42 },
+    { name: "Delhi", population: 34665000, transmission: 0.32, fatality: 0.60 },
+    { name: "Shanghai", population: 30482000, transmission: 0.22, fatality: 0.48 },
+    { name: "Dhaka", population: 24652000, transmission: 0.34, fatality: 0.65 },
+    { name: "Cairo", population: 23074000, transmission: 0.31, fatality: 0.62 },
+    { name: "São Paulo", population: 22990000, transmission: 0.24, fatality: 0.50 },
+    { name: "Mexico City", population: 22752000, transmission: 0.27, fatality: 0.55 },
+    { name: "Beijing", population: 22596000, transmission: 0.21, fatality: 0.46 },
+    { name: "Mumbai", population: 22089000, transmission: 0.30, fatality: 0.58 },
+    { name: "Osaka", population: 18921000, transmission: 0.19, fatality: 0.40 }
 ];
 const populationInput = document.querySelector("#population");
 const daysInput = document.querySelector("#days");
@@ -35,8 +34,9 @@ const status = document.querySelector("#modelStatus");
 const cityTitle = document.querySelector("#cityTitle");
 const brandSubtitle = document.querySelector("#brandSubtitle");
 const cityNotice = document.querySelector("#cityNotice");
-const protocolOutput = document.querySelector("#protocolOutput");
 const transmissionOutput = document.querySelector("#transmissionOutput");
+const fatalityOutput = document.querySelector("#fatalityOutput");
+const recoveryOutput = document.querySelector("#recoveryOutput");
 const chart = document.querySelector("#chart");
 const chartWrap = document.querySelector("#chartWrap");
 const tooltip = document.querySelector("#tooltip");
@@ -210,8 +210,12 @@ function update() {
     model.infected = Math.max(0, Math.floor(Number(infectedInput.value) || 0));
     populationOutput.value = formatNumber(populationInput.value);
     populationOutput.textContent = formatNumber(populationInput.value);
-    protocolOutput.textContent = `${Math.round(model.protocolReduction * 100)}%`;
     transmissionOutput.textContent = `${model.transmission.toFixed(2)} / day`;
+    const fatalityRatio = model.deathRate + model.recoveryRate > 0
+        ? model.deathRate / (model.deathRate + model.recoveryRate)
+        : 0;
+    fatalityOutput.textContent = `${Math.round(fatalityRatio * 100)}%`;
+    recoveryOutput.textContent = `${Math.round((1 - fatalityRatio) * 100)}%`;
     daysOutput.value = `${daysInput.value} days`;
     daysOutput.textContent = `${daysInput.value} days`;
     drawChart(simulate());
@@ -267,8 +271,6 @@ function parseCMR7(arrayBuffer) {
         model.infected = Math.round(infected);
     }
     if (bk !== null) model.transmission = bk;
-    if (bk !== null) model.baseTransmission = bk;
-    model.transmission = model.baseTransmission * (1 - model.protocolReduction);
     if (zk !== null) model.exposedToInfected = zk;
     if (sk !== null) model.deathRate = sk;
     if (bwk !== null) model.recoveryRate = bwk;
@@ -300,8 +302,9 @@ function pickRandomCity() {
     model.population = city.population;
     model.exposed = exposed;
     model.infected = infected;
-    model.protocolReduction = city.protocolReduction;
-    model.transmission = model.baseTransmission * (1 - model.protocolReduction);
+    model.transmission = city.transmission;
+    model.deathRate = city.fatality / infectiousPeriodDays;
+    model.recoveryRate = (1 - city.fatality) / infectiousPeriodDays;
     cityTitle.textContent = city.name;
     brandSubtitle.textContent = "Ebola outbreak forecast scenario";
     cityNotice.textContent = `Selected city: ${city.name}`;
@@ -310,8 +313,8 @@ function pickRandomCity() {
     status.innerHTML =
         `<strong>${city.name} scenario loaded.</strong><br>` +
         `Approx. ${formatNumber(city.population)} metro residents; ` +
-        `${exposed} exposed and ${infected} infected; assumed transmission reduction ` +
-        `${Math.round(city.protocolReduction * 100)}%.`;
+        `${exposed} exposed, ${infected} infected; transmission ${city.transmission.toFixed(2)}/day; ` +
+        `fatality ${Math.round(city.fatality * 100)}%, recovery ${Math.round((1 - city.fatality) * 100)}%.`;
     update();
 }
 

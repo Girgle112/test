@@ -50,12 +50,13 @@
                         <input id="infected" type="number" min="0" value="5">
                     </label>
                 </div>
-                <div class="protocol-values">
-                    <div><span>Assumed protocol reduction</span><strong id="protocolOutput">0%</strong></div>
-                    <div><span>Effective transmission</span><strong id="transmissionOutput">0.90 / day</strong></div>
+                <div class="model-rates">
+                    <div><span>Transmission rate</span><strong id="transmissionOutput">0.90 / day</strong></div>
+                    <div><span>Case fatality</span><strong id="fatalityOutput">50%</strong></div>
+                    <div><span>Recovery</span><strong id="recoveryOutput">50%</strong></div>
                 </div>
                 <button class="random-city-button" id="randomCity" type="button" onclick="pickRandomCity()">Pick a random city</button>
-                <small class="field-note">Protocol reductions are illustrative scenario assumptions, not verified city safety ratings. Population estimates and starting cases are approximate.</small>
+                <small class="field-note">City rates are illustrative scenarios, not measured local Ebola outcomes. <a href="https://www.who.int/news-room/fact-sheets/detail/ebola-disease" target="_blank" rel="noreferrer">WHO reports 25–90% case fatality across past outbreaks</a>; this model uses that broad range as context.</small>
             </div>
 
             <div class="model-status" id="modelStatus">
