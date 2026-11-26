@@ -40,7 +40,11 @@ const recoveryOutput = document.querySelector("#recoveryOutput");
 const chart = document.querySelector("#chart");
 const chartWrap = document.querySelector("#chartWrap");
 const tooltip = document.querySelector("#tooltip");
+const yScaleInput = document.querySelector("#yScale");
+const resetZoomButton = document.querySelector("#resetZoom");
+const zoomHint = document.querySelector("#zoomHint");
 let lastSelectedCity = null;
+let zoomRange = null;
 
 function formatNumber(value) {
     return Math.max(0, Math.round(value)).toLocaleString("en-US");
@@ -103,15 +107,22 @@ function drawChart(data) {
     const margin = { top: 20, right: 24, bottom: 42, left: 64 };
     const plotWidth = width - margin.left - margin.right;
     const plotHeight = height - margin.top - margin.bottom;
-    const maxValue = Math.max(100, ...data.flatMap(point =>
-        [point.susceptible, point.exposed, point.infected, point.recovered]
+    const minDay = zoomRange ? zoomRange.start : 0;
+    const maxDay = zoomRange ? zoomRange.end : data[data.length - 1].day;
+    const visibleData = data.filter(point => point.day >= minDay && point.day <= maxDay);
+    const maxValue = Math.max(model.population, 1, ...data.flatMap(point =>
+        [point.susceptible, point.exposed, point.infected, point.recovered, point.dead]
     ));
-    const yMax = Math.ceil(maxValue / 100) * 100;
-    const x = day => margin.left + day / data[data.length - 1].day * plotWidth;
-    const y = value => margin.top + plotHeight - value / yMax * plotHeight;
+    const logScale = yScaleInput.value === "log";
+    const yMax = logScale ? maxValue : Math.max(100, Math.ceil(maxValue / 100) * 100);
+    const transformY = value => logScale ? Math.log10(Math.max(0, value) + 1) : value;
+    const maxTransformedY = transformY(yMax) || 1;
+    const x = day => margin.left + (day - minDay) / (maxDay - minDay) * plotWidth;
+    const y = value => margin.top + plotHeight - transformY(value) / maxTransformedY * plotHeight;
 
     for (let i = 0; i <= 5; i++) {
-        const value = yMax * i / 5;
+        const transformedValue = maxTransformedY * i / 5;
+        const value = logScale ? Math.pow(10, transformedValue) - 1 : yMax * i / 5;
         const yy = y(value);
         chart.appendChild(svgElement("line", {
             x1: margin.left, y1: yy, x2: width - margin.right, y2: yy,
@@ -125,9 +136,21 @@ function drawChart(data) {
         chart.appendChild(label);
     }
 
-    const tickCount = width < 600 ? 4 : 6;
+    const selection = svgElement("rect", {
+        y: margin.top,
+        height: plotHeight,
+        fill: "#2e86ab",
+        "fill-opacity": 0.14,
+        stroke: "#2e86ab",
+        "stroke-width": 1,
+        visibility: "hidden",
+        "pointer-events": "none"
+    });
+    chart.appendChild(selection);
+
+    const tickCount = Math.max(1, Math.min(width < 600 ? 4 : 6, Math.floor(maxDay - minDay)));
     for (let i = 0; i <= tickCount; i++) {
-        const day = Math.round(data[data.length - 1].day * i / tickCount);
+        const day = Math.round(minDay + (maxDay - minDay) * i / tickCount);
         const xx = x(day);
         const label = svgElement("text", {
             x: xx, y: height - 14,
@@ -141,11 +164,12 @@ function drawChart(data) {
         { key: "susceptible", color: "#2e86ab" },
         { key: "exposed", color: "#ec7a3c" },
         { key: "infected", color: "#c94c4c" },
-        { key: "recovered", color: "#63a86f" }
+        { key: "recovered", color: "#63a86f" },
+        { key: "dead", color: "#735a9e" }
     ];
 
     series.forEach(item => {
-        const points = data.map(point => `${x(point.day)},${y(point[item.key])}`).join(" ");
+        const points = visibleData.map(point => `${x(point.day)},${y(point[item.key])}`).join(" ");
         chart.appendChild(svgElement("polyline", {
             points,
             fill: "none",
@@ -156,6 +180,16 @@ function drawChart(data) {
         }));
     });
 
+    chart.appendChild(svgElement("rect", {
+        x: margin.left,
+        y: margin.top,
+        width: plotWidth,
+        height: plotHeight,
+        fill: "transparent",
+        "pointer-events": "all"
+    }));
+
+    let dragStartX = null;
     const hoverLine = svgElement("line", {
         y1: margin.top,
         y2: margin.top + plotHeight,
@@ -166,10 +200,32 @@ function drawChart(data) {
     });
     chart.appendChild(hoverLine);
 
-    chart.onmousemove = event => {
+    chart.onpointerdown = event => {
         const rect = chart.getBoundingClientRect();
         const mouseX = event.clientX - rect.left;
-        const day = Math.round((mouseX - margin.left) / plotWidth * data[data.length - 1].day);
+        if (mouseX < margin.left || mouseX > width - margin.right) return;
+        dragStartX = Math.max(margin.left, Math.min(width - margin.right, mouseX));
+        selection.setAttribute("x", dragStartX);
+        selection.setAttribute("width", 0);
+        selection.setAttribute("visibility", "visible");
+        tooltip.style.display = "none";
+        chart.setPointerCapture(event.pointerId);
+        event.preventDefault();
+    };
+
+    chart.onpointermove = event => {
+        const rect = chart.getBoundingClientRect();
+        const mouseX = event.clientX - rect.left;
+        if (dragStartX !== null) {
+            const currentX = Math.max(margin.left, Math.min(width - margin.right, mouseX));
+            selection.setAttribute("x", Math.min(dragStartX, currentX));
+            selection.setAttribute("width", Math.abs(currentX - dragStartX));
+            return;
+        }
+
+        if (mouseX < margin.left || mouseX > width - margin.right) return;
+        const fraction = (mouseX - margin.left) / plotWidth;
+        const day = Math.round(minDay + fraction * (maxDay - minDay));
         const index = Math.max(0, Math.min(data.length - 1, day));
         const point = data[index];
         const xx = x(point.day);
@@ -183,17 +239,56 @@ function drawChart(data) {
             `Susceptible: ${formatNumber(point.susceptible)}<br>` +
             `Exposed: ${formatNumber(point.exposed)}<br>` +
             `Infected: ${formatNumber(point.infected)}<br>` +
-            `Recovered: ${formatNumber(point.recovered)}`;
+            `Recovered: ${formatNumber(point.recovered)}<br>` +
+            `Deaths: ${formatNumber(point.dead)}`;
 
         const tooltipX = Math.min(width - 170, Math.max(8, mouseX + 12));
         tooltip.style.left = `${tooltipX}px`;
         tooltip.style.top = "18px";
     };
 
-    chart.onmouseleave = () => {
-        hoverLine.setAttribute("opacity", 0);
-        tooltip.style.display = "none";
+    chart.onpointerup = event => {
+        if (dragStartX === null) return;
+        const rect = chart.getBoundingClientRect();
+        const endX = Math.max(margin.left, Math.min(width - margin.right, event.clientX - rect.left));
+        const startX = dragStartX;
+        dragStartX = null;
+        selection.setAttribute("visibility", "hidden");
+
+        if (Math.abs(endX - startX) < 12) return;
+        const firstDay = minDay + (Math.min(startX, endX) - margin.left) / plotWidth * (maxDay - minDay);
+        const lastDay = minDay + (Math.max(startX, endX) - margin.left) / plotWidth * (maxDay - minDay);
+        const start = Math.max(minDay, Math.floor(firstDay));
+        const end = Math.min(maxDay, Math.ceil(lastDay));
+        if (end - start < 1) return;
+
+        zoomRange = { start, end };
+        update();
     };
+
+    chart.onpointercancel = () => {
+        dragStartX = null;
+        selection.setAttribute("visibility", "hidden");
+    };
+
+    chart.onpointerleave = () => {
+        if (dragStartX === null) {
+            hoverLine.setAttribute("opacity", 0);
+            tooltip.style.display = "none";
+        }
+    };
+
+    chart.ondblclick = () => {
+        if (zoomRange) {
+            zoomRange = null;
+            update();
+        }
+    };
+
+    resetZoomButton.disabled = !zoomRange;
+    zoomHint.textContent = zoomRange
+        ? `Zoomed to days ${zoomRange.start}–${zoomRange.end}. Drag again to zoom further.`
+        : "Drag horizontally inside the graph to zoom into a time range.";
 
     const peak = data.reduce((best, point) => point.infected > best.infected ? point : best, data[0]);
     const finalPoint = data[data.length - 1];
@@ -218,6 +313,12 @@ function update() {
     recoveryOutput.textContent = `${Math.round((1 - fatalityRatio) * 100)}%`;
     daysOutput.value = `${daysInput.value} days`;
     daysOutput.textContent = `${daysInput.value} days`;
+    const forecastDays = Number(daysInput.value);
+    if (zoomRange && zoomRange.start >= forecastDays) {
+        zoomRange = null;
+    } else if (zoomRange && zoomRange.end > forecastDays) {
+        zoomRange.end = forecastDays;
+    }
     drawChart(simulate());
 }
 
@@ -284,6 +385,12 @@ function parseCMR7(arrayBuffer) {
 
 [populationInput, daysInput, exposedInput, infectedInput].forEach(input => {
     input.addEventListener("input", update);
+});
+
+yScaleInput.addEventListener("change", update);
+resetZoomButton.addEventListener("click", () => {
+    zoomRange = null;
+    update();
 });
 
 function pickRandomCity() {

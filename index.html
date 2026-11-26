@@ -37,7 +37,7 @@
                     Forecast period
                     <output id="daysOutput">60 days</output>
                 </label>
-                <input id="days" type="range" min="7" max="180" step="1" value="60">
+                <input id="days" type="range" min="7" max="1000" step="1" value="60">
             </div>
 
             <div class="control-group">
@@ -68,13 +68,25 @@
             <div class="chart-header">
                 <div>
                     <h2>Epidemic projection</h2>
-                    <p>Population over time</p>
+                    <p id="zoomHint">Drag horizontally inside the graph to zoom into a time range.</p>
                 </div>
-                <div class="legend">
-                    <span><i style="background: #2e86ab"></i>Susceptible</span>
-                    <span><i style="background: #ec7a3c"></i>Exposed</span>
-                    <span><i style="background: #c94c4c"></i>Infected</span>
-                    <span><i style="background: #63a86f"></i>Recovered</span>
+                <div class="chart-actions">
+                    <div class="legend">
+                        <span><i style="background: #2e86ab"></i>Susceptible</span>
+                        <span><i style="background: #ec7a3c"></i>Exposed</span>
+                        <span><i style="background: #c94c4c"></i>Infected</span>
+                        <span><i style="background: #63a86f"></i>Recovered</span>
+                        <span><i style="background: #735a9e"></i>Deaths</span>
+                    </div>
+                    <div class="chart-tools">
+                        <label for="yScale">Y scale
+                            <select id="yScale">
+                                <option value="log" selected>Logarithmic</option>
+                                <option value="linear">Linear</option>
+                            </select>
+                        </label>
+                        <button id="resetZoom" type="button" disabled>Reset zoom</button>
+                    </div>
                 </div>
             </div>
 
