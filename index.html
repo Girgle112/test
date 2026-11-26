@@ -3,43 +3,95 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome</title>
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            min-height: 100vh;
-            display: grid;
-            place-items: center;
-            font-family: Arial, sans-serif;
-            background: #f5f7fa;
-            color: #1f2937;
-        }
-
-        main {
-            padding: 3rem;
-            text-align: center;
-        }
-
-        h1 {
-            margin: 0 0 0.75rem;
-            font-size: clamp(2.5rem, 8vw, 5rem);
-        }
-
-        p {
-            margin: 0;
-            color: #64748b;
-            font-size: 1.125rem;
-        }
-    </style>
+    <title>Ebola Forecast Model</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <main>
-        <h1>Welcome</h1>
-        <p>Glad you're here.</p>
+    <header class="topbar">
+        <div class="brand">
+            <h1>Welcome</h1>
+            <p>Ebola outbreak forecast</p>
+        </div>
+        <label class="import-label">
+            <span>Import CMR7 model</span>
+            <input id="modelFile" type="file" accept=".cmr7">
+        </label>
+    </header>
+
+    <main class="workspace">
+        <aside class="controls">
+            <h2>Forecast settings</h2>
+
+            <div class="control-group">
+                <label class="control-label" for="population">
+                    Population
+                    <output id="populationOutput">515</output>
+                </label>
+                <input id="population" type="range" min="100" max="10000" step="100" value="515">
+            </div>
+
+            <div class="control-group">
+                <label class="control-label" for="days">
+                    Forecast period
+                    <output id="daysOutput">60 days</output>
+                </label>
+                <input id="days" type="range" min="7" max="180" step="1" value="60">
+            </div>
+
+            <div class="control-group">
+                <label class="control-label">Model parameters</label>
+                <div class="number-row">
+                    <label>Exposed
+                        <input id="exposed" type="number" min="0" value="10">
+                    </label>
+                    <label>Infected
+                        <input id="infected" type="number" min="0" value="5">
+                    </label>
+                </div>
+            </div>
+
+            <div class="model-status" id="modelStatus">
+                Original model parameters loaded.<br>
+                515 people across 60 days.
+            </div>
+        </aside>
+
+        <section class="chart-panel">
+            <div class="chart-header">
+                <div>
+                    <h2>Epidemic projection</h2>
+                    <p>Population over time</p>
+                </div>
+                <div class="legend">
+                    <span><i style="background: #2e86ab"></i>Susceptible</span>
+                    <span><i style="background: #ec7a3c"></i>Exposed</span>
+                    <span><i style="background: #c94c4c"></i>Infected</span>
+                    <span><i style="background: #63a86f"></i>Recovered</span>
+                </div>
+            </div>
+
+            <div class="chart-wrap" id="chartWrap">
+                <svg id="chart" role="img" aria-label="Ebola forecast line chart"></svg>
+                <div class="tooltip" id="tooltip"></div>
+            </div>
+
+            <div class="stats">
+                <div class="stat">
+                    <small>Peak infected</small>
+                    <strong id="peakStat">-</strong>
+                </div>
+                <div class="stat">
+                    <small>Projected deaths</small>
+                    <strong id="deathStat">-</strong>
+                </div>
+                <div class="stat">
+                    <small>Recovered</small>
+                    <strong id="recoveredStat">-</strong>
+                </div>
+            </div>
+        </section>
     </main>
+
+    <script src="app.js"></script>
 </body>
 </html>
