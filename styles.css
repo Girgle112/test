@@ -46,6 +46,15 @@ body {
     letter-spacing: 0.12em;
 }
 
+.brand .city-notice {
+    margin-top: 6px;
+    color: var(--orange);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+}
+
 .import-label {
     display: inline-flex;
     align-items: center;

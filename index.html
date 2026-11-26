@@ -11,6 +11,7 @@
         <div class="brand">
             <h1 id="cityTitle">Welcome</h1>
             <p id="brandSubtitle">Ebola outbreak forecast</p>
+            <p class="city-notice" id="cityNotice" aria-live="polite" hidden></p>
         </div>
         <label class="import-label">
             <span>Import CMR7 model</span>
@@ -49,7 +50,7 @@
                         <input id="infected" type="number" min="0" value="5">
                     </label>
                 </div>
-                <button class="random-city-button" id="randomCity" type="button">Pick a random city</button>
+                <button class="random-city-button" id="randomCity" type="button" onclick="pickRandomCity()">Pick a random city</button>
                 <small class="field-note">City sizes are approximate metro estimates; starting cases are illustrative, not current Ebola data.</small>
             </div>
 

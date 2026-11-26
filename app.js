@@ -32,12 +32,22 @@ const daysOutput = document.querySelector("#daysOutput");
 const status = document.querySelector("#modelStatus");
 const cityTitle = document.querySelector("#cityTitle");
 const brandSubtitle = document.querySelector("#brandSubtitle");
+const cityNotice = document.querySelector("#cityNotice");
 const chart = document.querySelector("#chart");
 const chartWrap = document.querySelector("#chartWrap");
 const tooltip = document.querySelector("#tooltip");
+let lastSelectedCity = null;
 
 function formatNumber(value) {
     return Math.max(0, Math.round(value)).toLocaleString("en-US");
+}
+
+function randomIntegerDifferentFrom(min, max, current) {
+    let value = Math.floor(Math.random() * (max - min + 1)) + min;
+    if (value === Number(current)) {
+        value = value === max ? min : value + 1;
+    }
+    return value;
 }
 
 function simulate() {
@@ -266,10 +276,15 @@ function parseCMR7(arrayBuffer) {
     input.addEventListener("input", update);
 });
 
-document.querySelector("#randomCity").addEventListener("click", () => {
-    const city = cities[Math.floor(Math.random() * cities.length)];
-    const exposed = Math.floor(Math.random() * 29) + 2;
-    const infected = Math.floor(Math.random() * 8) + 1;
+function pickRandomCity() {
+    let city = cities[Math.floor(Math.random() * cities.length)];
+    if (city.name === lastSelectedCity) {
+        const currentIndex = cities.findIndex(item => item.name === city.name);
+        city = cities[(currentIndex + 1) % cities.length];
+    }
+    const exposed = randomIntegerDifferentFrom(2, 30, exposedInput.value);
+    const infected = randomIntegerDifferentFrom(1, 8, infectedInput.value);
+    lastSelectedCity = city.name;
 
     populationInput.value = String(city.population);
     exposedInput.value = String(exposed);
@@ -279,13 +294,15 @@ document.querySelector("#randomCity").addEventListener("click", () => {
     model.infected = infected;
     cityTitle.textContent = city.name;
     brandSubtitle.textContent = "Ebola outbreak forecast scenario";
+    cityNotice.textContent = `Selected city: ${city.name}`;
+    cityNotice.hidden = false;
     document.title = `${city.name} — Ebola Forecast Model`;
     status.innerHTML =
         `<strong>${city.name} scenario loaded.</strong><br>` +
         `Approx. ${formatNumber(city.population)} metro residents; ` +
         `${exposed} exposed and ${infected} infected (illustrative starting values).`;
     update();
-});
+}
 
 document.querySelector("#modelFile").addEventListener("change", async event => {
     const file = event.target.files[0];
