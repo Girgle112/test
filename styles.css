@@ -135,6 +135,41 @@ input[type="range"] {
     color: var(--ink);
 }
 
+.controls input[type="number"] {
+    font: inherit;
+}
+
+.field-note {
+    display: block;
+    margin-top: 7px;
+    color: var(--muted);
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.random-city-button {
+    width: 100%;
+    min-height: 40px;
+    margin-top: 14px;
+    border: 0;
+    border-radius: 7px;
+    background: var(--ink);
+    color: #fff;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.random-city-button:hover {
+    background: #254c6d;
+}
+
+.random-city-button:focus-visible {
+    outline: 3px solid rgba(46, 134, 171, 0.35);
+    outline-offset: 2px;
+}
+
 .model-status {
     margin-top: 26px;
     padding: 12px;

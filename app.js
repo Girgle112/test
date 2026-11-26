@@ -6,6 +6,18 @@ const baseModel = {
 };
 
 const model = { ...baseModel };
+const cities = [
+    { name: "Tokyo", population: 37115000 },
+    { name: "Delhi", population: 34665000 },
+    { name: "Shanghai", population: 30482000 },
+    { name: "Dhaka", population: 24652000 },
+    { name: "Cairo", population: 23074000 },
+    { name: "São Paulo", population: 22990000 },
+    { name: "Mexico City", population: 22752000 },
+    { name: "Beijing", population: 22596000 },
+    { name: "Mumbai", population: 22089000 },
+    { name: "Osaka", population: 18921000 }
+];
 const populationInput = document.querySelector("#population");
 const daysInput = document.querySelector("#days");
 const exposedInput = document.querySelector("#exposed");
@@ -13,6 +25,8 @@ const infectedInput = document.querySelector("#infected");
 const populationOutput = document.querySelector("#populationOutput");
 const daysOutput = document.querySelector("#daysOutput");
 const status = document.querySelector("#modelStatus");
+const cityTitle = document.querySelector("#cityTitle");
+const brandSubtitle = document.querySelector("#brandSubtitle");
 const chart = document.querySelector("#chart");
 const chartWrap = document.querySelector("#chartWrap");
 const tooltip = document.querySelector("#tooltip");
@@ -170,6 +184,8 @@ function drawChart(data) {
 }
 
 function update() {
+    if (Number(populationInput.value) < 1) populationInput.value = "1";
+    populationInput.value = String(Math.floor(Number(populationInput.value) || 1));
     populationOutput.value = formatNumber(populationInput.value);
     populationOutput.textContent = formatNumber(populationInput.value);
     daysOutput.value = `${daysInput.value} days`;
@@ -220,7 +236,6 @@ function parseCMR7(arrayBuffer) {
     if ([healthy, exposed, infected].every(value => value !== null)) {
         const population = healthy + exposed + infected;
         populationInput.value = String(Math.round(population));
-        populationInput.max = String(Math.max(10000, Math.round(population) * 2));
         exposedInput.value = String(Math.round(exposed));
         infectedInput.value = String(Math.round(infected));
     }
@@ -238,6 +253,24 @@ function parseCMR7(arrayBuffer) {
 
 [populationInput, daysInput, exposedInput, infectedInput].forEach(input => {
     input.addEventListener("input", update);
+});
+
+document.querySelector("#randomCity").addEventListener("click", () => {
+    const city = cities[Math.floor(Math.random() * cities.length)];
+    const exposed = Math.floor(Math.random() * 29) + 2;
+    const infected = Math.floor(Math.random() * 8) + 1;
+
+    populationInput.value = String(city.population);
+    exposedInput.value = String(exposed);
+    infectedInput.value = String(infected);
+    cityTitle.textContent = city.name;
+    brandSubtitle.textContent = "Ebola outbreak forecast scenario";
+    document.title = `${city.name} — Ebola Forecast Model`;
+    status.innerHTML =
+        `<strong>${city.name} scenario loaded.</strong><br>` +
+        `Approx. ${formatNumber(city.population)} metro residents; ` +
+        `${exposed} exposed and ${infected} infected (illustrative starting values).`;
+    update();
 });
 
 document.querySelector("#modelFile").addEventListener("change", async event => {

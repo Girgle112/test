@@ -9,8 +9,8 @@
 <body>
     <header class="topbar">
         <div class="brand">
-            <h1>Welcome</h1>
-            <p>Ebola outbreak forecast</p>
+            <h1 id="cityTitle">Welcome</h1>
+            <p id="brandSubtitle">Ebola outbreak forecast</p>
         </div>
         <label class="import-label">
             <span>Import CMR7 model</span>
@@ -27,7 +27,8 @@
                     Population
                     <output id="populationOutput">515</output>
                 </label>
-                <input id="population" type="range" min="100" max="10000" step="100" value="515">
+                <input id="population" type="number" min="1" step="1" value="515" aria-label="Population">
+                <small class="field-note">Approximate city population when using a city scenario.</small>
             </div>
 
             <div class="control-group">
@@ -48,11 +49,12 @@
                         <input id="infected" type="number" min="0" value="5">
                     </label>
                 </div>
+                <button class="random-city-button" id="randomCity" type="button">Pick a random city</button>
+                <small class="field-note">City sizes are approximate metro estimates; starting cases are illustrative, not current Ebola data.</small>
             </div>
 
             <div class="model-status" id="modelStatus">
-                Original model parameters loaded.<br>
-                515 people across 60 days.
+                Original model parameters loaded. Forecasts are model scenarios, not real-world predictions.
             </div>
         </aside>
 
