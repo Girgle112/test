@@ -5,7 +5,12 @@ const baseModel = {
     recoveryRate: 0.30 / 7
 };
 
-const model = { ...baseModel };
+const model = {
+    ...baseModel,
+    population: 515,
+    exposed: 10,
+    infected: 5
+};
 const cities = [
     { name: "Tokyo", population: 37115000 },
     { name: "Delhi", population: 34665000 },
@@ -36,11 +41,11 @@ function formatNumber(value) {
 }
 
 function simulate() {
-    const population = Number(populationInput.value);
+    const population = model.population;
     const days = Number(daysInput.value);
-    let susceptible = population - Number(exposedInput.value) - Number(infectedInput.value);
-    let exposed = Number(exposedInput.value);
-    let infected = Number(infectedInput.value);
+    let susceptible = population - model.exposed - model.infected;
+    let exposed = model.exposed;
+    let infected = model.infected;
     let recovered = 0;
     let dead = 0;
     const data = [];
@@ -186,6 +191,9 @@ function drawChart(data) {
 function update() {
     if (Number(populationInput.value) < 1) populationInput.value = "1";
     populationInput.value = String(Math.floor(Number(populationInput.value) || 1));
+    model.population = Number(populationInput.value);
+    model.exposed = Math.max(0, Math.floor(Number(exposedInput.value) || 0));
+    model.infected = Math.max(0, Math.floor(Number(infectedInput.value) || 0));
     populationOutput.value = formatNumber(populationInput.value);
     populationOutput.textContent = formatNumber(populationInput.value);
     daysOutput.value = `${daysInput.value} days`;
@@ -238,6 +246,9 @@ function parseCMR7(arrayBuffer) {
         populationInput.value = String(Math.round(population));
         exposedInput.value = String(Math.round(exposed));
         infectedInput.value = String(Math.round(infected));
+        model.population = Math.round(population);
+        model.exposed = Math.round(exposed);
+        model.infected = Math.round(infected);
     }
     if (bk !== null) model.transmission = bk;
     if (zk !== null) model.exposedToInfected = zk;
@@ -263,6 +274,9 @@ document.querySelector("#randomCity").addEventListener("click", () => {
     populationInput.value = String(city.population);
     exposedInput.value = String(exposed);
     infectedInput.value = String(infected);
+    model.population = city.population;
+    model.exposed = exposed;
+    model.infected = infected;
     cityTitle.textContent = city.name;
     brandSubtitle.textContent = "Ebola outbreak forecast scenario";
     document.title = `${city.name} — Ebola Forecast Model`;
