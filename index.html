@@ -50,8 +50,12 @@
                         <input id="infected" type="number" min="0" value="5">
                     </label>
                 </div>
+                <div class="protocol-values">
+                    <div><span>Assumed protocol reduction</span><strong id="protocolOutput">0%</strong></div>
+                    <div><span>Effective transmission</span><strong id="transmissionOutput">0.90 / day</strong></div>
+                </div>
                 <button class="random-city-button" id="randomCity" type="button" onclick="pickRandomCity()">Pick a random city</button>
-                <small class="field-note">City sizes are approximate metro estimates; starting cases are illustrative, not current Ebola data.</small>
+                <small class="field-note">Protocol reductions are illustrative scenario assumptions, not verified city safety ratings. Population estimates and starting cases are approximate.</small>
             </div>
 
             <div class="model-status" id="modelStatus">

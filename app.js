@@ -7,21 +7,23 @@ const baseModel = {
 
 const model = {
     ...baseModel,
+    baseTransmission: baseModel.transmission,
+    protocolReduction: 0,
     population: 515,
     exposed: 10,
     infected: 5
 };
 const cities = [
-    { name: "Tokyo", population: 37115000 },
-    { name: "Delhi", population: 34665000 },
-    { name: "Shanghai", population: 30482000 },
-    { name: "Dhaka", population: 24652000 },
-    { name: "Cairo", population: 23074000 },
-    { name: "São Paulo", population: 22990000 },
-    { name: "Mexico City", population: 22752000 },
-    { name: "Beijing", population: 22596000 },
-    { name: "Mumbai", population: 22089000 },
-    { name: "Osaka", population: 18921000 }
+    { name: "Tokyo", population: 37115000, protocolReduction: 0.42 },
+    { name: "Delhi", population: 34665000, protocolReduction: 0.24 },
+    { name: "Shanghai", population: 30482000, protocolReduction: 0.38 },
+    { name: "Dhaka", population: 24652000, protocolReduction: 0.20 },
+    { name: "Cairo", population: 23074000, protocolReduction: 0.26 },
+    { name: "São Paulo", population: 22990000, protocolReduction: 0.36 },
+    { name: "Mexico City", population: 22752000, protocolReduction: 0.33 },
+    { name: "Beijing", population: 22596000, protocolReduction: 0.40 },
+    { name: "Mumbai", population: 22089000, protocolReduction: 0.29 },
+    { name: "Osaka", population: 18921000, protocolReduction: 0.44 }
 ];
 const populationInput = document.querySelector("#population");
 const daysInput = document.querySelector("#days");
@@ -33,6 +35,8 @@ const status = document.querySelector("#modelStatus");
 const cityTitle = document.querySelector("#cityTitle");
 const brandSubtitle = document.querySelector("#brandSubtitle");
 const cityNotice = document.querySelector("#cityNotice");
+const protocolOutput = document.querySelector("#protocolOutput");
+const transmissionOutput = document.querySelector("#transmissionOutput");
 const chart = document.querySelector("#chart");
 const chartWrap = document.querySelector("#chartWrap");
 const tooltip = document.querySelector("#tooltip");
@@ -206,6 +210,8 @@ function update() {
     model.infected = Math.max(0, Math.floor(Number(infectedInput.value) || 0));
     populationOutput.value = formatNumber(populationInput.value);
     populationOutput.textContent = formatNumber(populationInput.value);
+    protocolOutput.textContent = `${Math.round(model.protocolReduction * 100)}%`;
+    transmissionOutput.textContent = `${model.transmission.toFixed(2)} / day`;
     daysOutput.value = `${daysInput.value} days`;
     daysOutput.textContent = `${daysInput.value} days`;
     drawChart(simulate());
@@ -261,6 +267,8 @@ function parseCMR7(arrayBuffer) {
         model.infected = Math.round(infected);
     }
     if (bk !== null) model.transmission = bk;
+    if (bk !== null) model.baseTransmission = bk;
+    model.transmission = model.baseTransmission * (1 - model.protocolReduction);
     if (zk !== null) model.exposedToInfected = zk;
     if (sk !== null) model.deathRate = sk;
     if (bwk !== null) model.recoveryRate = bwk;
@@ -292,6 +300,8 @@ function pickRandomCity() {
     model.population = city.population;
     model.exposed = exposed;
     model.infected = infected;
+    model.protocolReduction = city.protocolReduction;
+    model.transmission = model.baseTransmission * (1 - model.protocolReduction);
     cityTitle.textContent = city.name;
     brandSubtitle.textContent = "Ebola outbreak forecast scenario";
     cityNotice.textContent = `Selected city: ${city.name}`;
@@ -300,7 +310,8 @@ function pickRandomCity() {
     status.innerHTML =
         `<strong>${city.name} scenario loaded.</strong><br>` +
         `Approx. ${formatNumber(city.population)} metro residents; ` +
-        `${exposed} exposed and ${infected} infected (illustrative starting values).`;
+        `${exposed} exposed and ${infected} infected; assumed transmission reduction ` +
+        `${Math.round(city.protocolReduction * 100)}%.`;
     update();
 }
 

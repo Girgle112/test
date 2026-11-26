@@ -156,6 +156,32 @@ input[type="range"] {
     line-height: 1.4;
 }
 
+.protocol-values {
+    display: grid;
+    gap: 8px;
+    margin-top: 14px;
+    padding: 11px 12px;
+    border-radius: 7px;
+    background: #f3f6f8;
+    font-size: 11px;
+}
+
+.protocol-values div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.protocol-values span {
+    color: var(--muted);
+}
+
+.protocol-values strong {
+    color: var(--ink);
+    font-size: 12px;
+}
+
 .random-city-button {
     width: 100%;
     min-height: 40px;
